@@ -7,3 +7,7 @@ Web Cam Project
 
 
 More Detailed README coming soon.
+
+Documentation : https://docs.google.com/presentation/d/1kMARlNVwAXfZMxKK6mEsEL2aXA9WmWdGyEggzcdBu9w/edit?usp=sharing
+
+
