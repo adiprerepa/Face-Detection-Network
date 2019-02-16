@@ -1,4 +1,4 @@
-Web Cam Project
+Web Cam Face Detection Project
 
 - Client: When motion is detected, images from webcam are sent to local server.
 - Local server recieves image, then inserts raw images taken on client into a MySQL database with JDBC.
@@ -9,3 +9,6 @@ READ THIS FOR MORE INFO :
 Documentation : https://docs.google.com/presentation/d/1kMARlNVwAXfZMxKK6mEsEL2aXA9WmWdGyEggzcdBu9w/edit?usp=sharing
 
 
+- Aditya Prerepa 2/15/19 - Server Design, Face Detection, Front end Receiving, MySQL Schema
+- Akshay Trivedi - Webcam Client
+- Ishan Jain - Website Design
