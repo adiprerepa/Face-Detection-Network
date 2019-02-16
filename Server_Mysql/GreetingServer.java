@@ -1,98 +1,117 @@
-import java.awt.*;
+package com.google.cloud.vision.samples;
+
 import java.awt.image.BufferedImage;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.*;
+import com.mysql.jdbc.Connection;
+
 import java.sql.*;
-
-
 import javax.imageio.ImageIO;
 
 
-public class GreetingServer extends Thread {
-    Integer i = 0;
-    private static final String url = "jdbc:mysql://localhost/WebCamImages";
+public class GreetingServer {
 
-    private static final String user = "adi";
+    private static ServerSocket serverSocket;
 
-    private static final String password = "adityapc";
-    private ServerSocket serverSocket;
-    private static Statement stmnt = null;
+    private static Connection con;
 
-    private static String webSiteAddress = "192.168.34.186";
-    private static Integer webSitePort = 55555;
-
-
-    Connection con = DriverManager.getConnection(url, user, password);
-    Socket server;
-
-    public GreetingServer(int port) throws Exception {
-        serverSocket = new ServerSocket(port);
-        serverSocket.setSoTimeout(180000);
-    }
-
-    public void run() {
-
-        while(true) {
-
-            try {
-                server = serverSocket.accept();
-
-                con.setAutoCommit(false);
-                Class.forName("com.mysql.jdbc.Driver");
-
-
-                BufferedImage img=ImageIO.read(ImageIO.createImageInputStream(server.getInputStream()));
-                File file = new File("/home/aditya/pic/img.jpg");
-                ImageIO.write(img, "jpg", file);
-
-                System.out.println("Finished Image to File.");
-
-                String INSERT_PICTURE = "INSERT INTO pic(idpic, img) VALUES (?, ?)";
-
-                try (FileInputStream fis = new FileInputStream(file);
-                     PreparedStatement ps = con.prepareStatement(INSERT_PICTURE)) {
-                    ps.setString(1, i.toString());
-                    ps.setBinaryStream(2, fis, (int) file.length());
-                    ps.executeUpdate();
-                    con.commit();
-                }
-
-
-                Socket socket = new Socket(webSiteAddress, webSitePort);
-//                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-//                dos.writeBytes("Yo is this shit working");
-
-
-                ImageIO.write(img, "JPG", socket.getOutputStream());
-                System.out.println("Sent image to website");
-
-            } catch(SocketTimeoutException st) {
-                System.out.println("Socket timed out!");
-                break;
-
-            } catch(IOException e) {
-                e.printStackTrace();
-                break;
-
-            } catch(Exception ex) {
-                System.out.println(ex);
-            }
+    public GreetingServer(int port)  {
+        try {
+            serverSocket = new ServerSocket(port);
+        } catch (IOException e) {
+            System.out.println("Error Creating serverSocket");
+            e.printStackTrace();
         }
     }
 
-    public static void main(String [] args)throws Exception {
-        Thread t = new GreetingServer(6066);
-        t.start();
+    public static BufferedImage acceptCommunicationWithWebcamClient(File file) {
+        BufferedImage img = null;
+        try {
+            /**
+             *Accept communication with webcam client
+             */
+            Socket server = serverSocket.accept();
+            System.out.println("Recieved Image");
+
+
+            /**
+             * Read Image from Socket and save the image to a file
+             */
+            img = ImageIO.read(ImageIO.createImageInputStream(server.getInputStream()));
+            ImageIO.write(img, "jpg", file);
+            System.out.println("Finished Image to File.");
+
+
+        } catch (Exception e) {
+            System.out.println("Error accepting communications and/or writing to file");
+        }
+        return img;
     }
 
-    public static void postRequest() throws Exception {
-        URL url = new URL("https://www.example.com/login");
-        URLConnection con = url.openConnection();
-        HttpURLConnection http = (HttpURLConnection)con;
-        http.setRequestMethod("POST"); // PUT is another valid option
-        http.setDoOutput(true);
+    public static void commitToDatabase(File file, String url, String user, String password) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            con = (Connection) DriverManager.getConnection(url, user, password);
+
+            con.setAutoCommit(false);
+        } catch (ClassNotFoundException e) {
+            System.out.println("Class Not found or DriverManager not init.");
+            e.printStackTrace();
+
+        } catch (SQLException sqlException) {
+            System.out.println("Error with MySQL");
+            sqlException.printStackTrace();
+        }
+
+
+        /**
+         * Commit the base-64 encoded image to a file for later use.
+         * @apiNote FileInputStream, PreparedStatement.
+         * The second parameter index saves as the image.
+         */
+        String INSERT_PICTURE = "INSERT INTO pic(img) VALUES (?)";
+
+        try (FileInputStream fis = new FileInputStream(file);
+             PreparedStatement ps = con.prepareStatement(INSERT_PICTURE)) {
+            ps.setBinaryStream(1, fis, (int) file.length());
+            ps.executeUpdate();
+            con.commit();
+
+        } catch (SQLException sqlException) {
+            System.out.println("error with MySQL");
+            sqlException.printStackTrace();
+
+        } catch (FileNotFoundException fileNotFound) {
+            System.out.println("File is not found of does not exist");
+            fileNotFound.printStackTrace();
+
+        } catch (IOException ioException) {
+            System.out.println("Error creating file input stream");
+            ioException.printStackTrace();
+        }
     }
+
+    public static void sendImageToWebsite(String webSiteAddress, int webSitePort, BufferedImage img) {
+        System.out.printf("Image trying to send to %s : %d", webSiteAddress, webSitePort);
+        try {
+            Socket socket = new Socket(webSiteAddress, webSitePort);
+            ImageIO.write(img, "JPG", socket.getOutputStream());
+
+        } catch (UnknownHostException e) {
+            System.out.println("Could not find host");
+            System.out.println();
+            e.printStackTrace();
+
+        } catch (IOException e) {
+            System.out.println("Input/Output error");
+            e.printStackTrace();
+        }
+
+        System.out.println("Sent image to website");
+    }
+
+
 }
