@@ -10,12 +10,12 @@ class DataSender {
     private String serverName;
     private int port;
 
-    DataSender(String serverName, int port) {
+    public DataSender(String serverName, int port) {
         this.serverName = serverName;
         this.port = port;
     }
 
-    void send(BufferedImage image) throws IOException {
+    public void send(BufferedImage image) throws IOException {
         Socket socket = new Socket(serverName, port);
         System.out.println("Sending data.");
         ImageIO.write(image,"JPG", socket.getOutputStream());
