@@ -4,10 +4,10 @@ package WebcamAPImain;
 import java.awt.image.BufferedImage;
 import com.github.sarxos.webcam.Webcam;
 
-class WebCam {
+public class WebCam {
     private Webcam webCam;
 
-    WebCam() {
+    public WebCam() {
         System.out.println("Finding Webcam...");
         webCam = Webcam.getDefault();
         if (webCam != null) {
@@ -24,7 +24,7 @@ class WebCam {
 
     }
 
-    BufferedImage get() {
+    public BufferedImage get() {
         return webCam.getImage();
     }
 }
