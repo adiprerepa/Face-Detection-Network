@@ -12,7 +12,9 @@ One table with a Blob data type
 To make the table and corresponding database in MySQL : 
 
 CREATE DATABASE WebCamImages;
+
 USE WebCamImages;
+
 CREATE TABLE PIC( img BLOB );
 
 
